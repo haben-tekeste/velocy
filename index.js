@@ -1,4 +1,4 @@
-const http = require('node:http')
+const http = require("node:http");
 const PORT = 5255;
 
 class Router {
@@ -9,6 +9,7 @@ class Router {
 
   addRoute(method, path, handler) {
     this.routes[`${method} ${path}`] = handler;
+    console.log(this.routes);
   }
 
   printRoutes() {
@@ -16,6 +17,7 @@ class Router {
   }
 
   handleRequest(request, response) {
+    console.log(request.url, request.method);
     const { url, method } = request;
     const handler = this.routes[`${method} ${url}`];
 
@@ -35,4 +37,4 @@ router.addRoute("POST", "/", function handleGetBasePath() {
   console.log("Hello from my POST /");
 });
 
-let server = http.createServer(router.handleRequest).listen(PORT)
+http.createServer((req, res) => router.handleRequest(req, res)).listen(PORT);
