@@ -17,16 +17,46 @@ class TrieRouter {
       );
     }
 
-    let routeParts = path
-      .replace(/\/{2,}/g, "/")
-      .split("/")
-      .map((curr) => curr.toLowerCase().trim());
+    let routeParts = this.getRouteParts(path);
 
     if (routeParts[routeParts.length - 1] == "") {
       routeParts = routeParts.slice(0, routeParts.length - 1);
     }
 
     this.addRouteParts(routeParts, handler);
+  }
+
+  findRoute(path) {
+    if (!path || typeof path !== "string")
+      throw new Error("`path` should of type string ");
+
+    if (path.endsWith("/")) path = path.substring(0, path.length - 1);
+
+    let routeParts = this.getRouteParts(path);
+    let node = this.rootNode;
+    let handler = null;
+
+    for (let i = 0; i < routeParts.length; i++) {
+      let currentPart = routeParts[i];
+
+      let nextNode = node.children.get(currentPart);
+
+      if (!nextNode) break;
+
+      if (i === routeParts.length) {
+        handler = nextNode.handler;
+      }
+
+      node = nextNode;
+    }
+    return handler;
+  }
+
+  getRouteParts(path) {
+    return path
+      .replace(/\/{2,}/g, "/")
+      .split("/")
+      .map((curr) => curr.toLowerCase().trim());
   }
 
   addRouteParts(routeParts, handler) {
