@@ -8,7 +8,7 @@ function getRouteParts(path) {
 class RouteNode {
   constructor() {
     this.children = new Map();
-    this.handler = null;
+    this.handler = new Map();
   }
 }
 
@@ -17,29 +17,38 @@ class TrieRouter {
     this.rootNode = new RouteNode();
   }
 
-  addRoute(path, handler) {
-    if (typeof path != "string" || typeof handler !== "function") {
+  addRoute(path, method, handler) {
+    if (
+      typeof path != "string" ||
+      typeof handler !== "function" ||
+      typeof method !== "string"
+    ) {
       throw new Error(
-        "Invalid params sent to the `addRoute` method. `path` should be of type `string` and `handler` should be of type function",
+        "Invalid params sent to the `addRoute` method. `path` should be of type `string`, `method` should be of type string and `handler` should be of type function",
       );
     }
 
-    let routeParts = this.getRouteParts(path);
+    method = method.toUpperCase();
+
+    let routeParts = getRouteParts(path);
 
     if (routeParts[routeParts.length - 1] == "") {
       routeParts = routeParts.slice(0, routeParts.length - 1);
     }
 
-    this.addRouteParts(routeParts, handler);
+    this.#addRouteParts(routeParts, method, handler);
   }
 
-  findRoute(path) {
+  findRoute(path, method) {
     if (!path || typeof path !== "string")
       throw new Error("`path` should of type string ");
 
+    if (!method || typeof method !== "string")
+      throw new Error("`method` should be of type string.");
+
     if (path.endsWith("/")) path = path.substring(0, path.length - 1);
 
-    let routeParts = this.getRouteParts(path);
+    let routeParts = getRouteParts(path);
     let node = this.rootNode;
     let handler = null;
 
@@ -50,8 +59,8 @@ class TrieRouter {
 
       if (!nextNode) break;
 
-      if (i === routeParts.length) {
-        handler = nextNode.handler;
+      if (i === routeParts.length - 1) {
+        handler = nextNode.handler.get(method);
       }
 
       node = nextNode;
@@ -59,7 +68,7 @@ class TrieRouter {
     return handler;
   }
 
-  addRouteParts(routeParts, handler) {
+  #addRouteParts(routeParts, method, handler) {
     let node = this.rootNode;
 
     for (let i = 0; i < routeParts.length; i++) {
@@ -73,7 +82,7 @@ class TrieRouter {
       }
 
       if (i === routeParts.length - 1) {
-        nextNode.handler = handler;
+        nextNode.handler.set(method, handler);
       }
 
       node = nextNode;
@@ -92,9 +101,12 @@ class TrieRouter {
 
 const trieRouter = new TrieRouter();
 
-function ref() {}
+function getHandler() {}
+function postHandler() {}
 
-trieRouter.addRoute("/home/", ref);
-trieRouter.addRoute("/  user/  status/play", function inline() {});
-trieRouter.addRoute("/home/id", ref);
-trieRouter.printTree();
+trieRouter.addRoute("/home", "GET", getHandler);
+trieRouter.addRoute("/home", "POST", postHandler);
+
+console.log(trieRouter.findRoute("/home", "GET")); // -> fn getHandler() {..}
+console.log(trieRouter.findRoute("/home", "PATCH")); // -> null or undefined
+console.log(trieRouter.findRoute("/home", "POST")); // -> fn postHanlder() {..}
