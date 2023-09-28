@@ -1,3 +1,10 @@
+function getRouteParts(path) {
+  return path
+    .replace(/\/{2,}/g, "/")
+    .split("/")
+    .map((curr) => curr.toLowerCase().trim());
+}
+
 class RouteNode {
   constructor() {
     this.children = new Map();
@@ -50,13 +57,6 @@ class TrieRouter {
       node = nextNode;
     }
     return handler;
-  }
-
-  getRouteParts(path) {
-    return path
-      .replace(/\/{2,}/g, "/")
-      .split("/")
-      .map((curr) => curr.toLowerCase().trim());
   }
 
   addRouteParts(routeParts, handler) {
